@@ -1,0 +1,64 @@
+---
+
+- name: Assert 'android_sdk_home' variable
+  ansible.builtin.assert:
+    that:
+      - android_sdk_home is defined
+      - android_sdk_home is string
+      - android_sdk_home | length > 0
+
+- name: Assert 'android_user_home' variable
+  ansible.builtin.assert:
+    that:
+      - android_user_home is defined
+      - android_user_home is string
+      - android_user_home | length > 0
+
+- name: Assert 'android_emulator_home' variable
+  ansible.builtin.assert:
+    that:
+      - android_emulator_home is defined
+      - android_emulator_home is string
+      - android_emulator_home | length > 0
+
+- name: Assert 'android_avd_home' variable
+  ansible.builtin.assert:
+    that: 
+      - android_avd_home is defined
+      - android_avd_home is string
+      - android_avd_home | length > 0
+
+- name: Assert 'android_requested_sdk' variable
+  ansible.builtin.assert:
+    that: 
+      - android_requested_sdk is not string
+      - android_requested_sdk is not mapping 
+      - android_requested_sdk is iterable
+  when:
+    - android_requested_sdk is defined
+
+
+- name: print items
+  ansible.builtin.debug:
+    msg: 
+     - "{{ item }}"
+  loop: "{{ android_requested_sdk }}"
+  when:
+    - android_requested_sdk is defined
+
+- name: Validate JSON schema
+  ansible.utils.validate:
+    data: "{{ android_requested_sdk }}"
+    criteria:
+      - "{{ lookup('file',  './criteria/requested_sdk_criteria.json') | from_json }}"
+    engine: ansible.utils.jsonschema
+  when:
+  - android_requested_sdk is defined
+
+- name: Verify versions
+  ansible.builtin.include_tasks: assert_versions.yml
+  loop: "{{ android_requested_sdk }}"
+  # loop_control:
+  #   loop_var: gradle_user
+  when:
+    - android_requested_sdk is defined

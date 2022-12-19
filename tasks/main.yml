@@ -1,2 +1,12 @@
 ---
-# tasks file for android_sdk
+# 
+
+
+- name: Assert necessary variables and environment for Android SDK installation
+  ansible.builtin.import_tasks: assertions/assert.yml
+  run_once: yes
+  delegate_to: localhost
+
+
+
+
