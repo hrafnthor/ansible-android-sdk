@@ -2,7 +2,7 @@
     "type": "object",
     "properties":
     {
-        "build-tools":
+        "build_tools":
         {
             "type": "array",
             "items":
@@ -63,7 +63,7 @@
                 ]
             }
         },
-        "platform-tools":
+        "platform_tools":
         {
             "type": "object",
             "properties":
@@ -81,7 +81,7 @@
                 }
             }
         },
-        "cmdline-tools":
+        "cmdline_tools":
         {
             "type": "object",
             "properties":
@@ -149,7 +149,17 @@
                     "version":
                     {
                         "type": "string",
-                        "pattern": "^[0-9]+.[0-9]+$"
+                        "pattern": "^[0-9]+.[0-9]+.[0-9]+$"
+                    },
+                    "channel":
+                    {
+                        "type": "number",
+                        "enum":
+                        [
+                            0,
+                            1,
+                            3
+                        ]
                     }
                 },
                 "required":

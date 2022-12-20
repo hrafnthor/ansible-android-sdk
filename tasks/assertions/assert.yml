@@ -7,12 +7,21 @@
       - android_sdk_home is string
       - android_sdk_home | length > 0
 
+- name: Assert 'android_sdk_bin' variable
+  ansible.builtin.assert:
+    that:
+      - android_sdk_bin is defined
+      - android_sdk_bin is string
+      - android_sdk_bin | length > 0
+
+
 - name: Assert 'android_user_home' variable
   ansible.builtin.assert:
     that:
       - android_user_home is defined
       - android_user_home is string
       - android_user_home | length > 0
+
 
 - name: Assert 'android_emulator_home' variable
   ansible.builtin.assert:
@@ -21,12 +30,30 @@
       - android_emulator_home is string
       - android_emulator_home | length > 0
 
+
 - name: Assert 'android_avd_home' variable
   ansible.builtin.assert:
     that: 
       - android_avd_home is defined
       - android_avd_home is string
       - android_avd_home | length > 0
+
+
+- name: Assert 'android_adb_to_path' variable
+  ansible.builtin.assert:
+    that:
+      - android_adb_to_path is boolean
+  when:
+    - android_adb_to_path is defined
+
+
+- name: Assert 'android_sdkmanager_to_path' variable
+  ansible.builtin.assert:
+    that:
+      - android_sdkmanager_to_path is boolean
+  when:
+    - android_sdkmanager_to_path is defined
+
 
 - name: Assert 'android_cmdlinetools_bootstrap_build' variable
   ansible.builtin.assert:
@@ -50,6 +77,7 @@
       - android_requested_sdk is mapping
   when:
     - android_requested_sdk is defined
+
 
 - name: Validate 'android_requested_sdk' schema
   ansible.utils.validate:

@@ -12,36 +12,153 @@
   ansible.builtin.import_tasks: env_vars.yml
 
 
-- name: Check for 'cmdline-tools' directory 
+- name: Stat 'cmdline-tools' directory 
   ansible.builtin.stat: 
     path: "{{ android_sdk_home }}/cmdline-tools/latest/bin"
-  register: cmdline_tools_path
+  register: cmdline_tools
 
 
 - name: Download 'cmdline-tools' bootstrap
   ansible.builtin.import_tasks: bootstrap.yml
-  when: not cmdline_tools_path.stat.exists
+  when: not cmdline_tools.stat.exists
 
 
 - name: Accept licenses
   ansible.builtin.shell:
-    cmd: yes | {{ android_sdk_home }}/cmdline-tools/latest/bin/sdkmanager --licenses
+    cmd: yes | {{ cmdline_tools.stat.path }}/sdkmanager --licenses
 
 
-- name: Update 'cmdline-tools' bootstrap to latest
+- name: Set 'cmdline-tools' to requested version 
   ansible.builtin.shell:
-    cmd: "{{ android_sdk_home }}/cmdline-tools/latest/bin/sdkmanager --install \"cmdline-tools;latest\""
+    cmd: "{{ cmdline_tools.stat.path }}/sdkmanager --install \"cmdline-tools;{{ android_requested_sdk.cmdline_tools.version }}\" --channel={{ android_requested_sdk.cmdline_tools.channel }}"
   environment:
     # The remote environment variables are not available to the task
-    # and so the environment is given here.
+    # and so the environment is supplied here.
     ANDROID_HOME: "{{ android_sdk_home }}"
   when:
-    - android_cmdlinetools_latest is defined
-    - android_cmdlinetools_latest is true
-  
+    - android_requested_sdk is defined
+    - android_requested_sdk.cmdline_tools is defined
 
-# - name: testing
-#   ansible.builtin.shell:
-#     cmd: echo $ANDROID_USER_HOME
-#   environment:
-#     ANDROID_USER_HOME: "{{ android_user_home }}"
+
+- name: Install requested 'build-tools' 
+  ansible.builtin.shell:
+    cmd: "{{ cmdline_tools.stat.path }}/sdkmanager --install \"build-tools;{{ item.version }}\" --channel={{ item.channel }}"
+  environment:
+    # The remote environment variables are not available to the task
+    # and so the environment is supplied here.
+    ANDROID_HOME: "{{ android_sdk_home }}"
+  loop: "{{ android_requested_sdk.build_tools }}"
+  when:
+    - android_requested_sdk is defined
+    - android_requested_sdk.build_tools is defined
+    - android_requested_sdk.build_tools | length > 0
+
+
+- name: Install requested 'platform-tools' 
+  ansible.builtin.shell:
+    cmd: "{{ cmdline_tools.stat.path }}/sdkmanager --install \"platform-tools\" --channel={{ android_requested_sdk.platform_tools.channel }}"
+  environment:
+    # The remote environment variables are not available to the task
+    # and so the environment is supplied here.
+    ANDROID_HOME: "{{ android_sdk_home }}"
+  when:
+    - android_requested_sdk is defined
+    - android_requested_sdk.platform_tools is defined
+
+
+- name: Install requested 'platforms' 
+  ansible.builtin.shell:
+    cmd: "{{ cmdline_tools.stat.path }}/sdkmanager --install \"platforms;android-{{ item.version }}\" --channel={{ item.channel }}"
+  environment:
+    # The remote environment variables are not available to the task
+    # and so the environment is supplied here.
+    ANDROID_HOME: "{{ android_sdk_home }}"
+  loop: "{{ android_requested_sdk.platforms }}"
+  when:
+    - android_requested_sdk is defined
+    - android_requested_sdk.platforms is defined
+    - android_requested_sdk.platforms | length > 0
+
+
+- name: Install requested 'ndk' 
+  ansible.builtin.shell:
+    cmd: "{{ cmdline_tools.stat.path }}/sdkmanager --install \"ndk;{{ item.version }}\" --channel={{ item.channel }}"
+  environment:
+    # The remote environment variables are not available to the task
+    # and so the environment is supplied here.
+    ANDROID_HOME: "{{ android_sdk_home }}"
+  loop: "{{ android_requested_sdk.ndk }}"
+  when:
+    - android_requested_sdk is defined
+    - android_requested_sdk.ndk is defined
+    - android_requested_sdk.ndk | length > 0
+
+
+- name: Install requested 'cmake' 
+  ansible.builtin.shell:
+    cmd: "{{ cmdline_tools.stat.path }}/sdkmanager --install \"cmake;{{ item.version }}\" --channel={{ item.channel }}"
+  environment:
+    # The remote environment variables are not available to the task
+    # and so the environment is supplied here.
+    ANDROID_HOME: "{{ android_sdk_home }}"
+  loop: "{{ android_requested_sdk.cmake }}"
+  when:
+    - android_requested_sdk is defined
+    - android_requested_sdk.cmake is defined
+    - android_requested_sdk.cmake | length > 0
+
+
+- name: Ensure 'android_sdk_bin' directory exists
+  ansible.builtin.file:
+    path: "{{ android_sdk_bin }}"
+    state: directory
+    modification_time: preserve
+    access_time: preserve
+    owner: "root"
+    group: "root"
+    mode: 0755
+  run_once: true
+
+
+- name: Add 'android_sdk_bin' to path
+  ansible.builtin.lineinfile: 
+    path: /etc/profile.d/android.sh
+    regexp: "^export PATH=" 
+    line: "export PATH={{ android_sdk_bin }}:$PATH"
+    create: yes
+    mode: 0644
+  run_once: true
+
+
+- name: Stat 'platform-tools' directory 
+  ansible.builtin.stat: 
+    path: "{{ android_sdk_home }}/platform-tools"
+  register: platform_tools
+
+
+- name: Add 'adb' to path
+  ansible.builtin.file:
+    src: "{{ platform_tools.stat.path }}/adb"
+    dest: "{{ android_sdk_bin }}/adb"
+    owner: "root"
+    group: "root"
+    mode: 0755
+    state: link
+  when:
+    - platform_tools.stat.exists
+    - android_adb_to_path is defined
+    - android_adb_to_path is true
+
+
+- name: Add 'sdkmanager' to path
+  ansible.builtin.file:
+    src: "{{ cmdline_tools.stat.path }}/sdkmanager"
+    dest: "{{ android_sdk_bin }}/sdkmanager"
+    owner: "root"
+    group: "root"
+    mode: 0755
+    state: link
+  when:
+    - cmdline_tools.stat.exists
+    - android_sdkmanager_to_path is defined
+    - android_sdkmanager_to_path is true
