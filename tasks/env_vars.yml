@@ -1,0 +1,38 @@
+---
+# Contains tasks related to environment variable registration
+
+
+- name: Register ANDROID_HOME
+  ansible.builtin.lineinfile: 
+    path: /etc/profile.d/android.sh
+    regexp: "^export ANDROID_HOME=" 
+    line: "export ANDROID_HOME={{ android_sdk_home }}"
+    create: yes
+    mode: 0644
+
+
+- name: Register ANDROID_USER_HOME
+  ansible.builtin.lineinfile: 
+    path: /etc/profile.d/android.sh
+    regexp: "^export ANDROID_USER_HOME=" 
+    line: "export ANDROID_USER_HOME=$USER/{{ android_user_home }}"
+    create: yes
+    mode: 0644
+
+
+- name: Register ANDROID_EMULATOR_HOME
+  ansible.builtin.lineinfile: 
+    path: /etc/profile.d/android.sh
+    regexp: "^export ANDROID_EMULATOR_HOME=" 
+    line: "export ANDROID_EMULATOR_HOME=$USER/{{ android_emulator_home }}"
+    create: yes
+    mode: 0644
+
+
+- name: Register ANDROID_AVD_HOME
+  ansible.builtin.lineinfile: 
+    path: /etc/profile.d/android.sh
+    regexp: "^export ANDROID_AVD_HOME=" 
+    line: "export ANDROID_AVD_HOME={{ android_avd_home }}"
+    create: yes
+    mode: 0644

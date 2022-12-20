@@ -8,5 +8,40 @@
   delegate_to: localhost
 
 
+- name: Register environment variables
+  ansible.builtin.import_tasks: env_vars.yml
 
 
+- name: Check for 'cmdline-tools' directory 
+  ansible.builtin.stat: 
+    path: "{{ android_sdk_home }}/cmdline-tools/latest/bin"
+  register: cmdline_tools_path
+
+
+- name: Download 'cmdline-tools' bootstrap
+  ansible.builtin.import_tasks: bootstrap.yml
+  when: not cmdline_tools_path.stat.exists
+
+
+- name: Accept licenses
+  ansible.builtin.shell:
+    cmd: yes | {{ android_sdk_home }}/cmdline-tools/latest/bin/sdkmanager --licenses
+
+
+- name: Update 'cmdline-tools' bootstrap to latest
+  ansible.builtin.shell:
+    cmd: "{{ android_sdk_home }}/cmdline-tools/latest/bin/sdkmanager --install \"cmdline-tools;latest\""
+  environment:
+    # The remote environment variables are not available to the task
+    # and so the environment is given here.
+    ANDROID_HOME: "{{ android_sdk_home }}"
+  when:
+    - android_cmdlinetools_latest is defined
+    - android_cmdlinetools_latest is true
+  
+
+# - name: testing
+#   ansible.builtin.shell:
+#     cmd: echo $ANDROID_USER_HOME
+#   environment:
+#     ANDROID_USER_HOME: "{{ android_user_home }}"

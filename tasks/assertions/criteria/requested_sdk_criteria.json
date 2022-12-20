@@ -1,0 +1,162 @@
+{
+    "type": "object",
+    "properties":
+    {
+        "build-tools":
+        {
+            "type": "array",
+            "items":
+            {
+                "type": "object",
+                "properties":
+                {
+                    "version":
+                    {
+                        "type": "string",
+                        "pattern": "^[0-9]+.[0-9]+.[0-9]+$"
+                    },
+                    "channel":
+                    {
+                        "type": "number",
+                        "enum":
+                        [
+                            0,
+                            1,
+                            2,
+                            3
+                        ]
+                    }
+                },
+                "required":
+                [
+                    "version"
+                ]
+            }
+        },
+        "platforms":
+        {
+            "type": "array",
+            "items":
+            {
+                "type": "object",
+                "properties":
+                {
+                    "version":
+                    {
+                        "type": "number"
+                    },
+                    "channel":
+                    {
+                        "type": "number",
+                        "enum":
+                        [
+                            0,
+                            1,
+                            2,
+                            3
+                        ]
+                    }
+                },
+                "required":
+                [
+                    "version"
+                ]
+            }
+        },
+        "platform-tools":
+        {
+            "type": "object",
+            "properties":
+            {
+                "channel":
+                {
+                    "type": "number",
+                    "enum":
+                    [
+                        0,
+                        1,
+                        2,
+                        3
+                    ]
+                }
+            }
+        },
+        "cmdline-tools":
+        {
+            "type": "object",
+            "properties":
+            {
+                "version":
+                {
+                    "type": "string",
+                    "pattern": "^[0-9]+.[0-9]+$|^latest$"
+                },
+                "channel":
+                {
+                    "type": "number",
+                    "enum":
+                    [
+                        0,
+                        1,
+                        2,
+                        3
+                    ]
+                }
+            },
+            "required":
+            [
+                "version"
+            ]
+        },
+        "ndk":
+        {
+            "type": "array",
+            "items":
+            {
+                "type": "object",
+                "properties":
+                {
+                    "version":
+                    {
+                        "type": "string",
+                        "pattern": "^[0-9]+.[0-9]+.[0-9]+$"
+                    },
+                    "channel":
+                    {
+                        "type": "number",
+                        "enum":
+                        [
+                            0,
+                            1,
+                            3
+                        ]
+                    }
+                },
+                "required":
+                [
+                    "version"
+                ]
+            }
+        },
+        "cmake":
+        {
+            "type": "array",
+            "items":
+            {
+                "type": "object",
+                "properties":
+                {
+                    "version":
+                    {
+                        "type": "string",
+                        "pattern": "^[0-9]+.[0-9]+$"
+                    }
+                },
+                "required":
+                [
+                    "version"
+                ]
+            }
+        }
+    }
+}

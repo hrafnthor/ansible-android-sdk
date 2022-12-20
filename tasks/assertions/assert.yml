@@ -28,25 +28,30 @@
       - android_avd_home is string
       - android_avd_home | length > 0
 
+- name: Assert 'android_cmdlinetools_bootstrap_build' variable
+  ansible.builtin.assert:
+    that: 
+      - android_cmdlinetools_bootstrap_build is defined
+      - android_cmdlinetools_bootstrap_build is integer
+
+
+- name: Assert 'android_cmdlinetools_bootstrap_checksum' variable
+  ansible.builtin.assert:
+    that: 
+      - android_cmdlinetools_bootstrap_checksum is defined
+      - android_cmdlinetools_bootstrap_checksum is string
+      - android_cmdlinetools_bootstrap_checksum | length > 0
+    fail_msg: "Checksum for cmdline bootstrap is required. Find it at https://developer.android.com/studio#command-tools"
+    
+
 - name: Assert 'android_requested_sdk' variable
   ansible.builtin.assert:
     that: 
-      - android_requested_sdk is not string
-      - android_requested_sdk is not mapping 
-      - android_requested_sdk is iterable
+      - android_requested_sdk is mapping
   when:
     - android_requested_sdk is defined
 
-
-- name: print items
-  ansible.builtin.debug:
-    msg: 
-     - "{{ item }}"
-  loop: "{{ android_requested_sdk }}"
-  when:
-    - android_requested_sdk is defined
-
-- name: Validate JSON schema
+- name: Validate 'android_requested_sdk' schema
   ansible.utils.validate:
     data: "{{ android_requested_sdk }}"
     criteria:
@@ -54,11 +59,3 @@
     engine: ansible.utils.jsonschema
   when:
   - android_requested_sdk is defined
-
-- name: Verify versions
-  ansible.builtin.include_tasks: assert_versions.yml
-  loop: "{{ android_requested_sdk }}"
-  # loop_control:
-  #   loop_var: gradle_user
-  when:
-    - android_requested_sdk is defined

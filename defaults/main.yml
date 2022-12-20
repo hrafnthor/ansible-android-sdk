@@ -1,32 +1,25 @@
 ---
 # Defines default values used for this task.
 
-# Indicates if the android platform tools package should be fetched.
-# If set to true, then the variable 'android_platform_tools_version' becomes required.
-android_platform_tools: true
-
-# Indicates if the android build tools package should be fetched.
-# If set to true, then the variable 'android_build_tools_version' becomes required
-android_build_tools: true
-
-android_cmd_tools: true
-
-
-
+# Sets the ANDROID_HOME environment variable.
 # Defines the sdk home directory system wide. 
 android_sdk_home: "/usr/lib/android-sdk"
 
+# Sets the ANDROID_USER_HOME environment variable.
 # Defines the user specific Android configuration home directory
 # The path is relative to the user's home directory
 android_user_home: ".android"
 
+# Sets the ANDROID_EMULATOR_HOME environment variable.
 # Defines the user specific emulator configuration home directory.
-# The path is relative to the user's home directory
+# The path is relative to the user's home directory.
 android_emulator_home: "{{ android_user_home }}"
 
-# Defines the emulator virtual disk storage. 
-android_avd_home: "{{ android_user_home }}"
+# Sets the ANDROID_AVD_HOME environment variable.
+# Defines the emulator virtual disk directory. 
+android_avd_home: "$USER/.android/avd"
 
+# Sets the ANDROID_LOG_TAGS environment variable.
 # Default filter expression run when using logcat.
 # See: https://developer.android.com/studio/command-line/variables#android_log_tags
 android_log_tags: ""
@@ -50,3 +43,4 @@ android_emu_http_proxy: ""
 # Used to provide a emulator serial to adb commands.
 # See: https://developer.android.com/studio/command-line/variables#android_serial
 android_emu_serial: ""
+

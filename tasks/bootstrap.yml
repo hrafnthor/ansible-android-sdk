@@ -1,0 +1,56 @@
+---
+# This task block performs folder creation, binary download and unarchiving of the
+# requested command line tools finalizing with cleanup of downloaded assets.
+
+- name: Install and configure 'cmdline-tools'
+  block:
+
+  - name: Ensure 'android_sdk_home' directory exists
+    ansible.builtin.file:
+      path: "{{ android_sdk_home }}"
+      state: directory
+      modification_time: preserve
+      access_time: preserve
+      owner: "root"
+      group: "root"
+      mode: 0755
+
+
+  - name: Ensure 'cmdline-tools' directory exists
+    ansible.builtin.file:
+      path: "{{ android_sdk_home }}/cmdline-tools"
+      state: directory
+      modification_time: preserve
+      access_time: preserve
+      owner: "root"
+      group: "root"
+      mode: 0755
+
+
+  - name: Download 'cmdline-tools' binary
+    ansible.builtin.get_url:
+      url: "https://dl.google.com/android/repository/commandlinetools-linux-{{ android_cmdlinetools_bootstrap_build }}_latest.zip"
+      dest: "{{ android_sdk_home }}/cmdline-tools-{{ android_cmdlinetools_bootstrap_build }}-bin.zip"
+      checksum: "sha256: {{ android_cmdlinetools_bootstrap_checksum }}"
+
+
+  - name: Extract 'cmdline-tools' binary
+    ansible.builtin.unarchive:
+      remote_src: yes
+      src: "{{ android_sdk_home }}/cmdline-tools-{{ android_cmdlinetools_bootstrap_build }}-bin.zip"
+      dest: "{{ android_sdk_home }}/cmdline-tools"
+      owner: "root"
+      group: "root"
+      mode: 0755
+
+
+  - name: Rename 'cmdline-tools' folder
+    ansible.builtin.shell:
+      cmd: mv "{{ android_sdk_home }}/cmdline-tools/cmdline-tools" "{{ android_sdk_home }}/cmdline-tools/latest"
+
+  always:
+
+    - name: Cleanup downloaded Gradle binary
+      ansible.builtin.file:
+        path: "{{ android_sdk_home }}/cmdline-tools-{{ android_cmdlinetools_bootstrap_build }}-bin.zip"
+        state: absent
