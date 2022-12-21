@@ -30,8 +30,7 @@
   ansible.builtin.stat: 
     path: "{{ android_sdk_home }}/cmdline-tools/latest/bin"
   register: cmdline_tools
-  when: not cmdline_tools.stat.exists
-
+  
 
 - name: Accept licenses
   ansible.builtin.shell:
