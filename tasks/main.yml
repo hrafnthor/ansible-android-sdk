@@ -1,5 +1,7 @@
 ---
-# 
+# Performs Android SDK command line tool bootstrap download and configuration
+# as well as installing and configuring the Android SDK via those command line
+# tools. 
 
 
 - name: Assert necessary variables and environment for Android SDK installation
@@ -18,26 +20,22 @@
   register: cmdline_tools
 
 
-- name: Download 'cmdline-tools' bootstrap
+- name: Bootstrap 'cmdline-tools'
   ansible.builtin.import_tasks: bootstrap.yml
+  when: not cmdline_tools.stat.exists
+
+
+# Stat folder required again in case the cmdline-tools just got downloaded
+- name: Stat 'cmdline-tools' directory 
+  ansible.builtin.stat: 
+    path: "{{ android_sdk_home }}/cmdline-tools/latest/bin"
+  register: cmdline_tools
   when: not cmdline_tools.stat.exists
 
 
 - name: Accept licenses
   ansible.builtin.shell:
     cmd: yes | {{ cmdline_tools.stat.path }}/sdkmanager --licenses
-
-
-- name: Set 'cmdline-tools' to requested version 
-  ansible.builtin.shell:
-    cmd: "{{ cmdline_tools.stat.path }}/sdkmanager --install \"cmdline-tools;{{ android_requested_sdk.cmdline_tools.version }}\" --channel={{ android_requested_sdk.cmdline_tools.channel }}"
-  environment:
-    # The remote environment variables are not available to the task
-    # and so the environment is supplied here.
-    ANDROID_HOME: "{{ android_sdk_home }}"
-  when:
-    - android_requested_sdk is defined
-    - android_requested_sdk.cmdline_tools is defined
 
 
 - name: Install requested 'build-tools' 

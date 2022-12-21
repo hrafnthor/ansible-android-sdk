@@ -1,6 +1,10 @@
 ---
-# This task block performs folder creation, binary download and unarchiving of the
-# requested command line tools finalizing with cleanup of downloaded assets.
+# This task block performs bootstrap tool download and configuration.
+# The cmdline-tools are installed into a bootstrap folder and the sdkmanager
+# used from there to update the cmdline-tools to the latest version.
+#
+# This will install the cmdline-tools under 'android_sdk_home'/cmdline-tools/latest
+# and those tools will be later used for further configuration. 
 
 - name: Install and configure 'cmdline-tools'
   block:
@@ -18,7 +22,7 @@
 
   - name: Ensure 'cmdline-tools' directory exists
     ansible.builtin.file:
-      path: "{{ android_sdk_home }}/cmdline-tools"
+      path: "{{ android_sdk_home }}/bootstrap"
       state: directory
       modification_time: preserve
       access_time: preserve
@@ -27,30 +31,46 @@
       mode: 0755
 
 
+  - name: Ensure 'cmdline-tools' directory exists
+    ansible.builtin.file:
+      path: "{{ android_sdk_home }}/bootstrap/cmdline-tools"
+      state: directory
+      modification_time: preserve
+      access_time: preserve
+      owner: "root"
+      group: "root"
+      mode: 0755
+
   - name: Download 'cmdline-tools' binary
     ansible.builtin.get_url:
       url: "https://dl.google.com/android/repository/commandlinetools-linux-{{ android_cmdlinetools_bootstrap_build }}_latest.zip"
-      dest: "{{ android_sdk_home }}/cmdline-tools-{{ android_cmdlinetools_bootstrap_build }}-bin.zip"
+      dest: "{{ android_sdk_home }}/bootstrap/cmdline-tools-{{ android_cmdlinetools_bootstrap_build }}-bin.zip"
       checksum: "sha256: {{ android_cmdlinetools_bootstrap_checksum }}"
 
 
   - name: Extract 'cmdline-tools' binary
     ansible.builtin.unarchive:
       remote_src: yes
-      src: "{{ android_sdk_home }}/cmdline-tools-{{ android_cmdlinetools_bootstrap_build }}-bin.zip"
-      dest: "{{ android_sdk_home }}/cmdline-tools"
+      src: "{{ android_sdk_home }}/bootstrap/cmdline-tools-{{ android_cmdlinetools_bootstrap_build }}-bin.zip"
+      dest: "{{ android_sdk_home }}/bootstrap"
       owner: "root"
       group: "root"
       mode: 0755
 
 
-  - name: Rename 'cmdline-tools' folder
+  - name: Accept licenses
     ansible.builtin.shell:
-      cmd: mv "{{ android_sdk_home }}/cmdline-tools/cmdline-tools" "{{ android_sdk_home }}/cmdline-tools/latest"
+      cmd: yes | {{ android_sdk_home }}/bootstrap/cmdline-tools/bin/sdkmanager --sdk_root={{ android_sdk_home }} --licenses
+
+
+  - name: Update 'cmdline-tools' to latest version 
+    ansible.builtin.shell:
+      cmd: "{{ android_sdk_home }}/bootstrap/cmdline-tools/bin/sdkmanager --sdk_root={{ android_sdk_home }} --install \"cmdline-tools;latest\""
+
 
   always:
 
     - name: Cleanup downloaded Gradle binary
       ansible.builtin.file:
-        path: "{{ android_sdk_home }}/cmdline-tools-{{ android_cmdlinetools_bootstrap_build }}-bin.zip"
+        path: "{{ android_sdk_home }}/bootstrap"
         state: absent
