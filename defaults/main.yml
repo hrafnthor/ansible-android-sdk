@@ -22,28 +22,3 @@ android_emulator_home: "{{ android_user_home }}"
 # Sets the ANDROID_AVD_HOME environment variable.
 # Defines the emulator virtual disk directory. 
 android_avd_home: "$USER/.android/avd"
-
-# Sets the ANDROID_LOG_TAGS environment variable.
-# Default filter expression run when using logcat.
-# See: https://developer.android.com/studio/command-line/variables#android_log_tags
-android_log_tags: ""
-
-# Sets the ANDROID_LOG_TAGS environment variable.
-# Should contain a comma-separated list of the debug information to log. 
-# See: https://developer.android.com/studio/command-line/variables#adb_trace
-android_log_trace: ""
-
-# Sets the ANDROID_VERBOSE environment variable.
-# Should contain a comma-separated list of verbose output options used by the emulator.
-# See: https://developer.android.com/studio/command-line/variables#android_verbose
-android_emu_verbose: ""
-
-# Sets the HTTP_PROXY environment variable.
-# Used by the emulator to configure a proxy connection
-# See: https://developer.android.com/studio/command-line/variables#http_proxy
-android_emu_http_proxy: ""
-
-# Sets the ANDROID_SERIAL environment variable
-# Used to provide a emulator serial to adb commands.
-# See: https://developer.android.com/studio/command-line/variables#android_serial
-android_emu_serial: ""
