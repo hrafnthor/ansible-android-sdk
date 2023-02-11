@@ -167,6 +167,12 @@
                     "version"
                 ]
             }
+        },
+        "plugdev_users": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
         }
     }
 }

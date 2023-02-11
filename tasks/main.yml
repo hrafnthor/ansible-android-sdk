@@ -171,3 +171,12 @@
 - name: Reload udev rules
   ansible.builtin.shell:
     cmd: udevadm control --reload
+
+- name: Add users to plugdev
+  ansible.builtin.shell:
+    cmd: "usermod -aG plugdev {{ user }}"
+  loop: "{{ plugdev_users }}"
+  loop_control:
+    loop_var: user
+  when:
+    - plugdev_users is defined
