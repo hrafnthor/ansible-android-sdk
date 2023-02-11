@@ -159,3 +159,15 @@
     - cmdline_tools.stat.exists
     - android_sdkmanager_to_path is defined
     - android_sdkmanager_to_path is true
+
+- name: Add '51-android.rules' udev rules
+  ansible.builtin.copy:
+    src: 51-android.rules
+    dest: /lib/udev/rules.d/51-android.rules
+    owner: "root"
+    group: "root"
+    mode: 0644
+
+- name: Reload udev rules
+  ansible.builtin.shell:
+    cmd: udevadm control --reload
