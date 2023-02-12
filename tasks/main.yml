@@ -35,6 +35,9 @@
     - cmdline_tools_bootstrap is defined
     - cmdline_tools_bootstrap.changed
 
+- name: print cmdline_tools
+  ansible.builtin.debug:
+    msg: System {{ cmdline_tools }}
 
 - name: Accept licenses
   ansible.builtin.shell:
@@ -42,6 +45,10 @@
   when:
     - cmdline_tools_bootstrap is defined
     - cmdline_tools_bootstrap.changed
+
+- name: print cmdline_tools
+  ansible.builtin.debug:
+    msg: System {{ cmdline_tools }}
 
 
 - name: Install requested 'build-tools' 
