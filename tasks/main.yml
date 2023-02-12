@@ -33,16 +33,18 @@
   register: cmdline_tools
   when:
     - cmdline_tools_bootstrap is defined
-    - cmdline_tools_bootstrap.stat.changed
-  
+    - cmdline_tools_bootstrap.changed
+
 
 - name: Accept licenses
   ansible.builtin.shell:
     cmd: yes | {{ cmdline_tools.stat.path }}/sdkmanager --licenses
   when:
     - cmdline_tools_bootstrap is defined
-    - cmdline_tools_bootstrap.stat.changed
+    - cmdline_tools_bootstrap.changed
 
+- debug:
+    msg: cmdline_tools
 
 - name: Install requested 'build-tools' 
   ansible.builtin.shell:
