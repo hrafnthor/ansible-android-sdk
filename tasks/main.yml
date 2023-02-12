@@ -178,8 +178,10 @@
 
 
 - name: Add users to plugdev
-  ansible.builtin.shell:
-    cmd: "usermod -aG plugdev {{ user }}"
+  ansible.builtin.user:
+    name: "{{ user }}"
+    append: true
+    groups: plugdev
   loop: "{{ plugdev_users }}"
   loop_control:
     loop_var: user
