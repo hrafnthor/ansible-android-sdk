@@ -19,42 +19,24 @@
     path: "{{ android_sdk_home }}/cmdline-tools/latest/bin"
   register: cmdline_tools
 
-- name: print cmdline_tools
-  ansible.builtin.debug:
-    msg: System {{ cmdline_tools }}
 
 - name: Bootstrap 'cmdline-tools'
   ansible.builtin.import_tasks: bootstrap.yml
-  register: cmdline_tools_bootstrap
   when: not cmdline_tools.stat.exists
 
-- name: print cmdline_tools
-  ansible.builtin.debug:
-    msg: System {{ cmdline_tools }}
 
 # Stat folder required again in case the cmdline-tools just got downloaded
 - name: Stat 'cmdline-tools' directory 
   ansible.builtin.stat: 
     path: "{{ android_sdk_home }}/cmdline-tools/latest/bin"
   register: cmdline_tools
-  when:
-    - cmdline_tools_bootstrap is defined
-    - cmdline_tools_bootstrap.changed
 
-- name: print cmdline_tools
-  ansible.builtin.debug:
-    msg: System {{ cmdline_tools }}
 
 - name: Accept licenses
   ansible.builtin.shell:
     cmd: yes | {{ cmdline_tools.stat.path }}/sdkmanager --licenses
   when:
-    - cmdline_tools_bootstrap is defined
-    - cmdline_tools_bootstrap.changed
-
-- name: print cmdline_tools
-  ansible.builtin.debug:
-    msg: System {{ cmdline_tools }}
+    - cmdline_tools.changed
 
 
 - name: Install requested 'build-tools' 
