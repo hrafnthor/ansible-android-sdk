@@ -44,7 +44,7 @@
     - cmdline_tools_bootstrap.changed
 
 - debug:
-    msg: cmdline_tools
+    msg: {{ cmdline_tools }}
 
 - name: Install requested 'build-tools' 
   ansible.builtin.shell:
