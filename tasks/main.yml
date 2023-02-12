@@ -19,12 +19,18 @@
     path: "{{ android_sdk_home }}/cmdline-tools/latest/bin"
   register: cmdline_tools
 
+- name: print cmdline_tools
+  ansible.builtin.debug:
+    msg: System {{ cmdline_tools }}
 
 - name: Bootstrap 'cmdline-tools'
   ansible.builtin.import_tasks: bootstrap.yml
   register: cmdline_tools_bootstrap
   when: not cmdline_tools.stat.exists
 
+- name: print cmdline_tools
+  ansible.builtin.debug:
+    msg: System {{ cmdline_tools }}
 
 # Stat folder required again in case the cmdline-tools just got downloaded
 - name: Stat 'cmdline-tools' directory 
