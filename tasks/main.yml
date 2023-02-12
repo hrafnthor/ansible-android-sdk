@@ -170,11 +170,15 @@
     owner: "root"
     group: "root"
     mode: 0644
+  register: android_rules
 
 
 - name: Reload udev rules
   ansible.builtin.shell:
     cmd: udevadm control --reload
+  when:
+    - android_rules is defined
+    - android_rules.changed is true
 
 
 - name: Add users to plugdev
