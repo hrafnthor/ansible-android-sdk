@@ -22,6 +22,7 @@
 
 - name: Bootstrap 'cmdline-tools'
   ansible.builtin.import_tasks: bootstrap.yml
+  register: cmdline_tools_bootstrap
   when: not cmdline_tools.stat.exists
 
 
@@ -30,11 +31,17 @@
   ansible.builtin.stat: 
     path: "{{ android_sdk_home }}/cmdline-tools/latest/bin"
   register: cmdline_tools
+  when:
+    - cmdline_tools_bootstrap is defined
+    - cmdline_tools_bootstrap.stat.changed
   
 
 - name: Accept licenses
   ansible.builtin.shell:
     cmd: yes | {{ cmdline_tools.stat.path }}/sdkmanager --licenses
+  when:
+    - cmdline_tools_bootstrap is defined
+    - cmdline_tools_bootstrap.stat.changed
 
 
 - name: Install requested 'build-tools' 
@@ -160,6 +167,7 @@
     - android_sdkmanager_to_path is defined
     - android_sdkmanager_to_path is true
 
+
 - name: Add '51-android.rules' udev rules
   ansible.builtin.copy:
     src: 51-android.rules
@@ -168,9 +176,11 @@
     group: "root"
     mode: 0644
 
+
 - name: Reload udev rules
   ansible.builtin.shell:
     cmd: udevadm control --reload
+
 
 - name: Add users to plugdev
   ansible.builtin.shell:
