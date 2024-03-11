@@ -33,7 +33,7 @@
 
 - name: Assert 'android_avd_home' variable
   ansible.builtin.assert:
-    that: 
+    that:
       - android_avd_home is defined
       - android_avd_home is string
       - android_avd_home | length > 0
@@ -57,23 +57,23 @@
 
 - name: Assert 'android_cmdlinetools_bootstrap_build' variable
   ansible.builtin.assert:
-    that: 
+    that:
       - android_cmdlinetools_bootstrap_build is defined
       - android_cmdlinetools_bootstrap_build is integer
 
 
 - name: Assert 'android_cmdlinetools_bootstrap_checksum' variable
   ansible.builtin.assert:
-    that: 
+    that:
       - android_cmdlinetools_bootstrap_checksum is defined
       - android_cmdlinetools_bootstrap_checksum is string
       - android_cmdlinetools_bootstrap_checksum | length > 0
     fail_msg: "Checksum for cmdline bootstrap is required. Find it at https://developer.android.com/studio#command-tools"
-    
+
 
 - name: Assert 'android_requested_sdk' variable
   ansible.builtin.assert:
-    that: 
+    that:
       - android_requested_sdk is mapping
   when:
     - android_requested_sdk is defined
@@ -83,7 +83,7 @@
   ansible.utils.validate:
     data: "{{ android_requested_sdk }}"
     criteria:
-      - "{{ lookup('file',  './criteria/requested_sdk_criteria.json') | from_json }}"
+      - "{{ lookup('file',  'assertions/criteria/requested_sdk_criteria.json') | from_json }}"
     engine: ansible.utils.jsonschema
   when:
   - android_requested_sdk is defined
