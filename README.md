@@ -165,17 +165,17 @@ Example Playbook
         build_tools:
         - version: "33.0.0"
           channel: 2
-      platforms:
+        platforms:
         - version: 33
           channel: 0
-      platform_tools:
-        channel: 0
-      ndk:
+        platform_tools:
+          channel: 0
+        ndk:
         - version: "25.0.8775105"
           channel: 0
         - version: "25.1.8937393"
           channel: 0
-      cmake:
+        cmake:
         - version: "3.22.1"
           channel: 0
         - version: "3.6.4111459"
