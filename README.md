@@ -1,4 +1,4 @@
-Role Name
+Ansible Android SDK
 =========
 
 An opinionated role that installs the Android SDK's command line toolset and 
