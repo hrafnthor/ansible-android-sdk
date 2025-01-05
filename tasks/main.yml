@@ -1,193 +1,22 @@
----
-# Performs Android SDK command line tool bootstrap download and configuration
-# as well as installing and configuring the Android SDK via those command line
-# tools. 
 
-
-- name: Assert necessary variables and environment for Android SDK installation
-  ansible.builtin.import_tasks: assertions/assert.yml
+- name: "Android | SDK | Validate 'android_sdk' variable"
+  ansible.utils.validate:
+    data: "{{ android_sdk }}"
+    criteria: "{{ lookup('file', 'assertions/criteria/android-sdk-criteria.json') | from_json }}"
+    engine: ansible.utils.jsonschema
   run_once: yes
   delegate_to: localhost
 
+- name: "Android | SDK | set 'android_sdk_home' variable"
+  ansible.builtin.set_fact:
+    android_sdk_home: "{{  android_sdk.environment.variables.sdk_home.path | default(android_sdk_home) }}"
 
-- name: Register environment variables
-  ansible.builtin.import_tasks: env_vars.yml
-
-
-- name: Stat 'cmdline-tools' directory 
-  ansible.builtin.stat: 
-    path: "{{ android_sdk_home }}/cmdline-tools/latest/bin"
-  register: cmdline_tools
-
-
-- name: Bootstrap 'cmdline-tools'
-  ansible.builtin.import_tasks: bootstrap.yml
-  when: not cmdline_tools.stat.exists
-
-
-# Stat folder required again in case the cmdline-tools just got downloaded
-- name: Stat 'cmdline-tools' directory 
-  ansible.builtin.stat: 
-    path: "{{ android_sdk_home }}/cmdline-tools/latest/bin"
-  register: cmdline_tools
-
-
-- name: Accept licenses
-  ansible.builtin.shell:
-    cmd: yes | {{ cmdline_tools.stat.path }}/sdkmanager --licenses
+- name: "Android | SDK | Configure sdk"
+  ansible.builtin.import_tasks: configure.yml
   when:
-    - cmdline_tools.changed
+    - android_sdk.remove is undefined or not android_sdk.remove
 
-
-- name: Install requested 'build-tools' 
-  ansible.builtin.shell:
-    cmd: "{{ cmdline_tools.stat.path }}/sdkmanager --install \"build-tools;{{ item.version }}\" --channel={{ item.channel }} | grep -v = || true"
-  environment:
-    # The remote environment variables are not available to the task
-    # and so the environment is supplied here.
-    ANDROID_HOME: "{{ android_sdk_home }}"
-  loop: "{{ android_requested_sdk.build_tools }}"
+- name: "Android | SDK | Remove sdk"
+  ansible.builtin.import_tasks: remove.yml
   when:
-    - android_requested_sdk is defined
-    - android_requested_sdk.build_tools is defined
-    - android_requested_sdk.build_tools | length > 0
-
-
-- name: Install requested 'platform-tools' 
-  ansible.builtin.shell:
-    cmd: "{{ cmdline_tools.stat.path }}/sdkmanager --install \"platform-tools\" --channel={{ android_requested_sdk.platform_tools.channel }} | grep -v = || true"
-  environment:
-    # The remote environment variables are not available to the task
-    # and so the environment is supplied here.
-    ANDROID_HOME: "{{ android_sdk_home }}"
-  when:
-    - android_requested_sdk is defined
-    - android_requested_sdk.platform_tools is defined
-
-
-- name: Install requested 'platforms' 
-  ansible.builtin.shell:
-    cmd: "{{ cmdline_tools.stat.path }}/sdkmanager --install \"platforms;android-{{ item.version }}\" --channel={{ item.channel }} | grep -v = || true"
-  environment:
-    # The remote environment variables are not available to the task
-    # and so the environment is supplied here.
-    ANDROID_HOME: "{{ android_sdk_home }}"
-  loop: "{{ android_requested_sdk.platforms }}"
-  when:
-    - android_requested_sdk is defined
-    - android_requested_sdk.platforms is defined
-    - android_requested_sdk.platforms | length > 0
-
-
-- name: Install requested 'ndk' 
-  ansible.builtin.shell:
-    cmd: "{{ cmdline_tools.stat.path }}/sdkmanager --install \"ndk;{{ item.version }}\" --channel={{ item.channel }} | grep -v = || true"
-  environment:
-    # The remote environment variables are not available to the task
-    # and so the environment is supplied here.
-    ANDROID_HOME: "{{ android_sdk_home }}"
-  loop: "{{ android_requested_sdk.ndk }}"
-  when:
-    - android_requested_sdk is defined
-    - android_requested_sdk.ndk is defined
-    - android_requested_sdk.ndk | length > 0
-
-
-- name: Install requested 'cmake' 
-  ansible.builtin.shell:
-    cmd: "{{ cmdline_tools.stat.path }}/sdkmanager --install \"cmake;{{ item.version }}\" --channel={{ item.channel }} | grep -v = || true"
-  environment:
-    # The remote environment variables are not available to the task
-    # and so the environment is supplied here.
-    ANDROID_HOME: "{{ android_sdk_home }}"
-  loop: "{{ android_requested_sdk.cmake }}"
-  when:
-    - android_requested_sdk is defined
-    - android_requested_sdk.cmake is defined
-    - android_requested_sdk.cmake | length > 0
-
-
-- name: Ensure 'android_sdk_bin' directory exists
-  ansible.builtin.file:
-    path: "{{ android_sdk_bin }}"
-    state: directory
-    modification_time: preserve
-    access_time: preserve
-    owner: "root"
-    group: "root"
-    mode: 0755
-  run_once: true
-
-
-- name: Add 'android_sdk_bin' to path
-  ansible.builtin.lineinfile: 
-    path: /etc/profile.d/android.sh
-    regexp: "^export PATH=" 
-    line: "export PATH={{ android_sdk_bin }}:$PATH"
-    create: yes
-    mode: 0644
-  run_once: true
-
-
-- name: Stat 'platform-tools' directory 
-  ansible.builtin.stat: 
-    path: "{{ android_sdk_home }}/platform-tools"
-  register: platform_tools
-
-
-- name: Add 'adb' to path
-  ansible.builtin.file:
-    src: "{{ platform_tools.stat.path }}/adb"
-    dest: "{{ android_sdk_bin }}/adb"
-    owner: "root"
-    group: "root"
-    mode: 0755
-    state: link
-  when:
-    - platform_tools.stat.exists
-    - android_adb_to_path is defined
-    - android_adb_to_path is true
-
-
-- name: Add 'sdkmanager' to path
-  ansible.builtin.file:
-    src: "{{ cmdline_tools.stat.path }}/sdkmanager"
-    dest: "{{ android_sdk_bin }}/sdkmanager"
-    owner: "root"
-    group: "root"
-    mode: 0755
-    state: link
-  when:
-    - cmdline_tools.stat.exists
-    - android_sdkmanager_to_path is defined
-    - android_sdkmanager_to_path is true
-
-
-- name: Add '51-android.rules' udev rules
-  ansible.builtin.copy:
-    src: 51-android.rules
-    dest: /lib/udev/rules.d/51-android.rules
-    owner: "root"
-    group: "root"
-    mode: 0644
-  register: android_rules
-
-
-- name: Reload udev rules
-  ansible.builtin.shell:
-    cmd: udevadm control --reload
-  when:
-    - android_rules is defined
-    - android_rules.changed is true
-
-
-- name: Add users to plugdev
-  ansible.builtin.user:
-    name: "{{ user }}"
-    append: true
-    groups: plugdev
-  loop: "{{ plugdev_users }}"
-  loop_control:
-    loop_var: user
-  when:
-    - plugdev_users is defined
+    - android_sdk.remove is defined and android_sdk.remove

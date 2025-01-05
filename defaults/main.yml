@@ -7,7 +7,7 @@ android_sdk_home: "/usr/lib/android/sdk"
 
 # Defines a path to a directory where certain SDK binaries will be 
 # symlinked to. The directory is then added to the global path.
-android_sdk_bin: "/usr/lib/android/bin"
+android_sdk_bin: "/usr/bin"
 
 # Sets the ANDROID_USER_HOME environment variable.
 # Defines the user specific Android configuration home directory
@@ -17,8 +17,8 @@ android_user_home: ".android"
 # Sets the ANDROID_EMULATOR_HOME environment variable.
 # Defines the user specific emulator configuration home directory.
 # The path is relative to the user's home directory.
-android_emulator_home: "{{ android_user_home }}"
+android_emulator_home: ".android/emulators"
 
 # Sets the ANDROID_AVD_HOME environment variable.
 # Defines the emulator virtual disk directory. 
-android_avd_home: "$HOME/.android/avd"
+android_avd_home: ".android/avd"

@@ -1,0 +1,233 @@
+- name: "Android | SDK | Ensure 'android_sdk_home' directory"
+  ansible.builtin.file:
+    path: "{{ android_sdk_home }}"
+    state: directory
+    modification_time: preserve
+    access_time: preserve
+    owner: "{{ android_sdk.environment.sdk_home.owner | default('root') }}"
+    group: "{{ android_sdk.environment.sdk_home.group | default('root') }}"
+    mode: "{{ android_sdk.environment.sdk_home.mode | default('0755')}}"
+
+- name: "Android | SDK | Register ANDROID_HOME"
+  ansible.builtin.lineinfile: 
+    path: /etc/profile.d/android.sh
+    regexp: "^export ANDROID_HOME=" 
+    line: "export ANDROID_HOME={{ android_sdk_home }}"
+    create: yes
+    mode: 0644
+
+- name: "Android | SDK | set 'android_user_home' variable"
+  ansible.builtin.set_fact:
+    android_user_home: "$HOME/{{ android_sdk.environment.variables.android_user_home | default(android_user_home) }}"
+
+- name: "Android | SDK | Register ANDROID_USER_HOME"
+  ansible.builtin.lineinfile: 
+    path: /etc/profile.d/android.sh
+    regexp: "^export ANDROID_USER_HOME=" 
+    line: "export ANDROID_USER_HOME={{ android_user_home }}"
+    create: yes
+    mode: 0644
+
+- name: "Android | SDK | set 'android_emulator_home' variable"
+  ansible.builtin.set_fact:
+    android_emulator_home: "$HOME/{{ android_sdk.environment.variables.android_emulator_home | default(android_emulator_home) }}"
+
+- name: "Android | SDK | Register ANDROID_EMULATOR_HOME"
+  ansible.builtin.lineinfile: 
+    path: /etc/profile.d/android.sh
+    regexp: "^export ANDROID_EMULATOR_HOME=" 
+    line: "export ANDROID_EMULATOR_HOME={{ android_emulator_home }}"
+    create: yes
+    mode: 0644
+
+- name: "Android | SDK | set 'android_avd_home' variable"
+  ansible.builtin.set_fact:
+    android_avd_home: "$HOME/{{ android_sdk.environment.variables.android_avd_home | default(android_avd_home) }}"
+
+- name: "Android | SDK | Register ANDROID_AVD_HOME"
+  ansible.builtin.lineinfile: 
+    path: /etc/profile.d/android.sh
+    regexp: "^export ANDROID_AVD_HOME=" 
+    line: "export ANDROID_AVD_HOME={{ android_avd_home }}"
+    create: yes
+    mode: 0644
+
+- name: "Android | SDK | Stat cmdline-tools directory"
+  ansible.builtin.stat: 
+    path: "{{ android_sdk_home }}/cmdline-tools/latest/bin"
+  register: cmdline_tools
+
+- name: "Android | SDK | Bootstrap 'cmdline-tools'"
+  ansible.builtin.import_tasks: bootstrap.yml
+  register: bootstrap
+  when:
+    - not cmdline_tools.stat.exists
+
+- name: "Android | SDK | Stat cmdline-tools directory"
+  ansible.builtin.stat: 
+    path: "{{ android_sdk_home }}/cmdline-tools/latest/bin"
+  register: cmdline_tools
+
+- name: "Android | SDK | Set 'sdkmanager_path'"
+  ansible.builtin.set_fact:
+    sdkmanager_path: "{{ cmdline_tools.stat.path }}/sdkmanager"
+
+- name: "Android | SDK | Accept licenses"
+  ansible.builtin.shell:
+    cmd: "yes | {{ sdkmanager_path }} --licenses"
+  when:
+    - bootstrap is defined
+    - bootstrap.changed
+
+- name: "Android | SDK | Define four channel mapping"
+  ansible.builtin.set_fact:
+    four_channel_map:
+      "stable": 0
+      "beta": 1
+      "development": 2
+      "canary": 3
+
+- name: "Android | SDK | Define three channel mapping"
+  ansible.builtin.set_fact:
+    three_channel_map:
+      "stable": 0
+      "beta": 1
+      "canary": 3
+
+- name: "Android | SDK | Install build tools"
+  ansible.builtin.shell:
+    cmd: "{{ sdkmanager_path }} --install \"build-tools;{{ item.version }}\" --channel={{ four_channel_map[item.channel] | default('0') }} | grep -v = || true"
+  environment:
+    # The remote environment variables are not available to the task
+    # and so the environment is supplied here.
+    ANDROID_HOME: "{{ android_sdk_home }}"
+  loop: "{{ android_sdk.build_tools }}"
+  when:
+    - android_sdk.build_tools is defined
+    - android_sdk.build_tools | length > 0
+
+- name: "Android | SDK | Install platform tools"
+  ansible.builtin.shell:
+    cmd: "{{ sdkmanager_path }} --install \"platform-tools\" --channel={{ four_channel_map[android_sdk.platform_tools.channel] | default('0') }} | grep -v = || true"
+  environment:
+    # The remote environment variables are not available to the task
+    # and so the environment is supplied here.
+    ANDROID_HOME: "{{ android_sdk_home }}"
+  when:
+    - android_sdk.platform_tools is defined
+
+- name: "Android | SDK | Install platforms"
+  ansible.builtin.shell:
+    cmd: "{{ sdkmanager_path }} --install \"platforms;android-{{ item.version }}\" --channel={{ four_channel_map[item.channel] | default('0') }} | grep -v = || true"
+  environment:
+    # The remote environment variables are not available to the task
+    # and so the environment is supplied here.
+    ANDROID_HOME: "{{ android_sdk_home }}"
+  loop: "{{ android_sdk.platforms }}"
+  when:
+    - android_sdk.platforms is defined
+    - android_sdk.platforms | length > 0
+
+- name: "Android | SDK | Install NDK"
+  ansible.builtin.shell:
+    cmd: "{{ sdkmanager_path }} --install \"ndk;{{ item.version }}\" --channel={{ three_channel_map[item.channel] | default('0') }} | grep -v = || true"
+  environment:
+    # The remote environment variables are not available to the task
+    # and so the environment is supplied here.
+    ANDROID_HOME: "{{ android_sdk_home }}"
+  loop: "{{ android_requested_sdk.ndk }}"
+  when:
+    - android_sdk.ndk is defined
+    - android_sdk.ndk | length > 0
+
+- name: "Android | SDK | Install cmake"
+  ansible.builtin.shell:
+    cmd: "{{ sdkmanager_path }} --install \"cmake;{{ item.version }}\" --channel={{ three_channel_map[item.channel] | default('0') }} | grep -v = || true"
+  environment:
+    # The remote environment variables are not available to the task
+    # and so the environment is supplied here.
+    ANDROID_HOME: "{{ android_sdk_home }}"
+  loop: "{{ android_requested_sdk.cmake }}"
+  when:
+    - android_sdk.cmake is defined
+    - android_sdk.cmake | length > 0
+
+- name: "Android | SDK | Ensure 'android_sdk_bin' exists"
+  ansible.builtin.file:
+    path: "{{ android_sdk_bin }}"
+    state: directory
+    modification_time: preserve
+    access_time: preserve
+    owner: "root"
+    group: "root"
+    mode: 0755
+
+- name: "Android | SDK | Add 'android_sdk_bin' to path"
+  ansible.builtin.lineinfile: 
+    path: /etc/profile.d/android.sh
+    regexp: "^export PATH=" 
+    line: "export PATH={{ android_sdk_bin }}:$PATH"
+    create: yes
+    mode: 0644
+  when:
+    - android_sdk_bin != "/usr/bin"
+
+- name: "Android | SDK |  Stat 'platform-tools' directory"
+  ansible.builtin.stat: 
+    path: "{{ android_sdk_home }}/platform-tools"
+  register: platform_tools
+
+- name: "Android | SDK | Add 'adb' binary to path"
+  ansible.builtin.file:
+    src: "{{ platform_tools.stat.path }}/adb"
+    dest: "{{ android_sdk_bin }}/adb"
+    owner: "root"
+    group: "root"
+    mode: 0755
+    state: link
+  when:
+    - platform_tools.stat.exists
+    - android_sdk.environment.link.adb is defined
+    - android_sdk.environment.link.adb
+
+- name: "Android | SDK | Add 'sdkmanager' to path"
+  ansible.builtin.file:
+    src: "{{ cmdline_tools.stat.path }}/sdkmanager"
+    dest: "{{ android_sdk_bin }}/sdkmanager"
+    owner: "root"
+    group: "root"
+    mode: 0755
+    state: link
+  when:
+    - cmdline_tools.stat.exists
+    - android_sdk.environment.link.sdkmanager is defined
+    - android_sdk.environment.link.sdkmanager
+
+- name: "Android | SDK | Add udev rules"
+  ansible.builtin.copy:
+    src: 51-android.rules
+    dest: /lib/udev/rules.d/51-android.rules
+    owner: "root"
+    group: "root"
+    mode: 0644
+  register: android_rules
+  when:
+    - android_sdk.environment.udev is undefined or (android_sdk.environment.udev is defined and not android_sdk.environment.udev)
+
+- name: "Android | SDK | Reload udev rules"
+  ansible.builtin.shell:
+    cmd: udevadm control --reload
+  when:
+    - android_rules is defined
+    - android_rules.changed is true
+
+- name: "Android | SDK | Add users to plugdev"
+  ansible.builtin.user:
+    name: "{{ user }}"
+    append: true
+    groups: plugdev
+  loop: "{{ android_sdk.plugdev_users }}"
+  loop_control:
+    loop_var: user
+  when:
+    - android_sdk.plugdev_users is defined
