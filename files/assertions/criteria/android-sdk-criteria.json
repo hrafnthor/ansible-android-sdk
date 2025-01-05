@@ -1,0 +1,249 @@
+{
+    "title": "android-sdk",
+    "description": "A json schema for Android SDK installation",
+    "type": "object",
+    "properties":
+    {
+        "remove":
+        {
+            "type": "boolean"
+        },
+        "bootstrap":
+        {
+            "type": "object",
+            "properties":
+            {
+                "build":
+                {
+                    "type": "integer"
+                },
+                "checksum":
+                {
+                    "ref": "#/definitions/non-empty-string"
+                }
+            },
+            "required":
+            [
+                "build",
+                "checksum"
+            ]
+        },
+        "environment":
+        {
+            "type": "object",
+            "properties":
+            {
+                "android_sdk_home":
+                {
+                    "type": "object",
+                    "properties":
+                    {
+                        "path":
+                        {
+                            "ref": "#/definitions/non-empty-string"
+                        },
+                        "owner":
+                        {
+                            "ref": "#/definitions/non-empty-string"
+                        },
+                        "group":
+                        {
+                            "ref": "#/definitions/non-empty-string"
+                        },
+                        "mode":
+                        {
+                            "ref": "#/definitions/non-empty-string"
+                        }
+                    }
+                },
+                "variables":
+                {
+                    "type": "object",
+                    "properties":
+                    {
+                        "android_user_home":
+                        {
+                            "ref": "#/definitions/non-empty-string"
+                        },
+                        "android_emulator_home":
+                        {
+                            "ref": "#/definitions/non-empty-string"
+                        },
+                        "android_avd_home":
+                        {
+                            "ref": "#/definitions/non-empty-string"
+                        }
+                    }
+                },
+                "link":
+                {
+                    "type": "object",
+                    "properties":
+                    {
+                        "adb":
+                        {
+                            "type": "boolean"
+                        },
+                        "sdkmanager":
+                        {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "udev":
+                {
+                    "type": "boolean"
+                }
+            }
+        },
+        "build_tools":
+        {
+            "type": "array",
+            "items":
+            {
+                "type": "object",
+                "properties":
+                {
+                    "version":
+                    {
+                        "ref": "#/definitions/semvar-string"
+                    },
+                    "channel":
+                    {
+                        "ref": "#/definitions/four-channels"
+                    }
+                },
+                "required":
+                [
+                    "version"
+                ]
+            }
+        },
+        "platforms":
+        {
+            "type": "array",
+            "items":
+            {
+                "type": "object",
+                "properties":
+                {
+                    "version":
+                    {
+                        "type": "integer"
+                    },
+                    "channel":
+                    {
+                        "ref": "#/definitions/four-channels"
+                    }
+                },
+                "required":
+                [
+                    "version"
+                ]
+            }
+        },
+        "platform_tools":
+        {
+            "type": "object",
+            "properties":
+            {
+                "channel":
+                {
+                    "ref": "#/definitions/four-channels"
+                }
+            },
+            "required":
+            [
+                "channel"
+            ]
+        },
+        "ndk":
+        {
+            "type": "array",
+            "items":
+            {
+                "type": "object",
+                "properties":
+                {
+                    "version":
+                    {
+                        "ref": "#/definitions/semvar-string"
+                    },
+                    "channel":
+                    {
+                        "ref": "#/definitions/three-channels"
+                    }
+                },
+                "required":
+                [
+                    "version"
+                ]
+            }
+        },
+        "cmake":
+        {
+            "type": "array",
+            "items":
+            {
+                "type": "object",
+                "properties":
+                {
+                    "version":
+                    {
+                        "ref": "#/definitions/semvar-string"
+                    },
+                    "channel":
+                    {
+                        "ref": "#/definitions/three-channels"
+                    }
+                },
+                "required":
+                [
+                    "version"
+                ]
+            }
+        },
+        "plugdev_users":
+        {
+            "type": "array",
+            "items":
+            {
+                "type": "string"
+            }
+        }
+    },
+    "definitions":
+    {
+        "non-empty-string":
+        {
+            "type": "string",
+            "minLength": 1
+        },
+        "three-channels":
+        {
+            "type": "string",
+            "enum":
+            [
+                "stable",
+                "beta",
+                "canary"
+            ]
+        },
+        "four-channels":
+        {
+            "type": "string",
+            "enum":
+            [
+                "stable",
+                "beta",
+                "development",
+                "canary"
+            ]
+        },
+        "semvar-string":
+        {
+            "type": "string",
+            "pattern": "^[0-9]+.[0-9]+.[0-9]+$"
+        }
+    }
+}

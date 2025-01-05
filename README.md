@@ -1,10 +1,8 @@
-Ansible Android SDK
-=========
+# Ansible Android SDK
 
-An opinionated role that installs the Android SDK's command line toolset and 
-any other requested part of the SDK.
+A Ansible role for installing Android SDK on linux machines.
 
-Requirements
+## Requirements
 ------------
 
 This role requires two separate tools be installed.
@@ -21,112 +19,7 @@ Secondly it requires the `jsonschema` Python package be installed via:
 pip install jsonschema
 ```
 
-
-Role Variables
---------------
-
-`android_cmdlinetools_bootstrap_build` : [number] (required) The build number of the `cmdline-tools` package which should be downloaded as part of the bootstrap process. The build numbers can be found [here](https://developer.android.com/studio#command-line-tools-only)
-
-`android_cmdlinetools_bootstrap_checksum` : [string] (required) The checksum associated with the build version of the `cmdline-tools` package that will be used as part of the bootstrap process. The checksums can be found [here](https://developer.android.com/studio#command-line-tools-only)
-
-`android_adb_to_path` : [boolean] Indicates if the `adb` binary should be added to the global path (default: `false`).
-
-`android_sdkmanager_to_path` : [boolean] Indicates if the `sdkmanager` binary should be added to the global path (default: `false`).
-
-`android_sdk_home` : [string] The absolute path to where the Android SDK will be 
-installed (default: `/usr/lib/android/sdk`).
-
-`android_sdk_bin` : [string] The absolute path to where Android SDK binaries (suchas `adb` and `sdkmanager`) will be linked and shared with the global path (default: `/usr/lib/android/bin`)
-
-`android_user_home` : [string] The path relative to each user's home directory where user specific SDK configuration and files will be stored (default: `.android`) 
-
-`android_emulator_home` : [string] The path relative to each user's home directory where emulator specific configuration and files will be stored (default: `.android`)
-
-`android_avd_home` : [string] The absolute path to where the Android Virtual Disk image will be stored for the emulator (default: `$USER/.android`)
-
-`android_requested_sdk` : [mapping] Defines the parts of the SDK that will be installed, their versions and from what channel.
-
-###### Structure of android_requested_sdk map
-
-`build_tools` : [array] Contains information on each version of build tools that will be installed:
-
-    - `version` : [string] (required) Must follow the pattern `^[0-9]+.[0-9]+.[0-9]+$`
-    - `channel` : [number] Must be one of the following 0: stable, 1: beta, 2: dev, 3: canary
-
-Example:
-
-```yaml
-- build_tools:
-    - version: "31.0.1"
-      channel: 0
-    - version: "29.0.2"
-      channel: 2
- ```
-
-`platforms` : [array] Contains information on each version of the platform that will be installed:
-
-    - `version` : [number] (required) Must follow the pattern [0-9]+
-    - `channel` : [number] Must be one of the following 0: stable, 1: beta, 2: dev, 3: canary
-
-Example:
-
-```yaml
-- platforms:
-    - version: 33
-      channel: 1
-    - version: 29
-      channel: 0
-```
-
-`platform_tools` : [object] Contains information on the version of platform tools that will be installed. Only information contained is the channel, otherwise it will always install the latest version
-
- - `channel` : [number] Must be one of the following 0: stable, 1: beta, 2: dev, 3: canary
-
-
-Example:
-
-```yaml
-- platform_tools:
-    channel: 0
-```
-
-`ndk` : [array] Contains information on each version of the NDK that will be installed:
-
-    - `version` : [string] (required) Must follow the pattern [0-9]+.[0-9]+.[0-9]+
-    - `channel` : [number] Must be one of the following 0: stable, 1: beta, 3: canary
- 
-Example:
-```yaml
-- ndk:
-    - version: "25.0.8775105"
-      channel: 0
-    - version: "25.1.8937393"
-      channel: 3
-```
-
-`cmake` : [array] Contains information on each version of CMake that will be installed:
-
-    - `version` : [string] (required) Must follow the pattern [0-9]+.[0-9]+.[0-9]+
-    - `channel` : [number] Must be one of the following 0: stable, 1: beta, 3: canary
-
-Example:
-```yaml
-- cmake:
-    - version: "3.22.1"
-      channel: 0
-    - version: "3.6.4111459"
-      channel: 0
-```
-
-`plugdev_users` : [array] Contains the user names who should be added to the `plugdev` group
-
-Dependencies
-------------
-
-None, other then previously stated requirements.
-
-Setup
------
+## Setup
 
 Before the role can be used it needs to be added to the machine running the playbook, and as of writing this, this role is not hosted on Ansible-Galaxy only on Github.
 
@@ -148,41 +41,91 @@ ansible-galaxy install -r .requirements.yml
 
 This will allow any playbook run from this machine to use the role `hth-android-sdk`
 
+## Variables
 
-Example Playbook
-----------------
+The role expects a top level variable `android_sdk` with the following structure (all are optional unless otherwise specified):
+
+```yaml
+android_sdk:
+  remove: [boolean]   If present, will remove all files and environment variables that the role sets
+  bootstrap:
+    build: [integer]   The cmdtool build version to download
+    checksum: [string]  The checksum of the cmdline archive.
+  environment:
+    sdk_home:
+      path: [string]  The location where the sdk should be installed. Defaults to '/usr/lib/android/sdk'
+      owner: [string] The user who should own the installation directory. Defaults to 'root'
+      group: [string] The group who should own the installation directory. Defaults to 'root'
+      mode: [string]  The chmod of the sdk installation directory. Defaults to '0755'
+    variables:
+      android_user_home: [string] The location android configuration directory per user. This path is always prefaced with $HOME. Defaults to '.android'
+      android_emulator_home: [string] The location for the android emulator configuration directory per user. This path is always prefaced with $HOME. Defaults to '.android/emulator'
+      android_avd_home: [string] The location for android avd configuration directory per user. This path is always prefaced with $HOME. Defaults to '.android/avd'
+    link:
+      adb: [boolean]  If true, adb will be symlinked to '/usr/bin'
+      sdkmanager: [boolean] If true, sdkmanager will be symlinked to '/usr/bin'
+    platform_tools:
+      channel: [stable, beta, canary] Indicates the channel to install platform tools from. Defaults to 'stable'
+    build_tools:
+      - version: [string] The version to install [required]
+        channel: [stable, beta, development, canary] Indicates the the channel to install from. Defaults to 'stable'
+    platforms:
+      - version: [integer] The version to install [required]
+        channel: [stable, beta, development, canary]  Indicates the the channel to install from. Defaults to 'stable'
+    ndk:
+      - version: [string] The version to install [required]
+        channel: [stable, beta, canary]  Indicates the the channel to install from. Defaults to 'stable'
+    cmake:
+      - version: [string] The version to install [required]
+        channel: [stable, beta, canary]  Indicates the the channel to install from. Defaults to 'stable'
+    plugdev_users: [string array] A list of users to add the 'plugdev' group to.
+```
+
+#### Bootstrap
+
+The cmdline version information and associated checksums can be found [here](https://developer.android.com/studio#command-line-tools-only).
+
+#### Platform Tools
+
+The release information and versions for platform tools can be found [here](https://developer.android.com/tools/releases/platform-tools).
+
+#### Build Tools
+
+The release information and versions for build tools can be found [here](https://developer.android.com/tools/releases/build-tools).
+
+#### Command-Line Tools
+
+The release information and versions for command line tools can be found [here](https://developer.android.com/tools/releases/cmdline-tools).
+
+### Example playbook
 
 
 ```yaml
 - hosts: all
     vars:
-    - android_user_home: ".android"
-    - android_adb_to_path: true
-    - android_sdkmanager_to_path: true
-    - android_cmdlinetools_bootstrap_build: 9123335
-    - android_cmdlinetools_bootstrap_checksum: "0bebf59339eaa534f4217f8aa0972d14dc49e7207be225511073c661ae01da0a"
-    - android_requested_sdk:
+      android_sdk:
+        bootstrap:
+          build: 11076708
+          checksum: "2d2d50857e4eb553af5a6dc3ad507a17adf43d115264b1afc116f95c92e5e258"
+        environment:
+          sdk_home:
+            group: "developers"
+            mode: "2774"
+          variables:
+            android_user_home: ".android"
+          link:
+            adb: true
+            sdkmanager: true
         build_tools:
-        - version: "33.0.0"
-          channel: 2
-        platforms:
-        - version: 33
-          channel: 0
+          - version: "34.0.0"
+            channel: "stable"
         platform_tools:
-          channel: 0
-        ndk:
-        - version: "25.0.8775105"
-          channel: 0
-        - version: "25.1.8937393"
-          channel: 0
-        cmake:
-        - version: "3.22.1"
-          channel: 0
-        - version: "3.6.4111459"
-          channel: 0
-      plugdev_users:
-        - stevens
-        - tina
+          channel: "stable"
+        platforms:
+          - version: 34
+            channel: "stable"
+        plugdev_users:
+          - hrafn
   roles:
      - hth-android-sdk
 ```
